@@ -29,7 +29,6 @@ def print_header():
     print ('# vault-dump.py backup')
     print ("# backup date: {}".format(date))
     print ("# VAULT_ADDR env variable: {}".format(vault_address))
-    # print ("# TOP_VAULT_PREFIX env variable: {}".format(top_vault_prefix))
     print ('# STDIN encoding: {}'.format(sys.stdin.encoding))
     print ('# STDOUT encoding: {}'.format(sys.stdout.encoding))
     print ('#')
@@ -60,6 +59,19 @@ def print_header():
 #                 print (" {0}={1}".format(final_key, repr(final_value)), end='')
 
 
+def get_kv_engines():
+    secret_engines = client.sys.list_mounted_secrets_engines()['data']
+    kv_engines = [
+        {
+            "path": path,
+            "version": secret_engine["options"]["version"]
+        } 
+        for path, secret_engine in secret_engines.items() 
+        if secret_engine["type"] == "kv"
+    ]
+    return kv_engines
+
+
 hvac_url = os.environ.get('VAULT_ADDR','http://localhost:8200')
 hvac_token = os.environ.get('VAULT_TOKEN','http://localhost:8200')
 
@@ -70,6 +82,9 @@ hvac_client = {
 client = hvac.Client(**hvac_client)
 assert client.is_authenticated()
 
+kv_engines = get_kv_engines()
+
 print_header()
+
 # top_level_keys = client.list(top_vault_prefix)
 # recurse_for_values(top_vault_prefix, top_level_keys)
