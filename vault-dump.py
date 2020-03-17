@@ -20,6 +20,7 @@ import sys
 import os
 import hvac
 import datetime
+from shlex import quote
 
 def print_header():
     date = "{} UTC".format(datetime.datetime.utcnow())
@@ -34,29 +35,6 @@ def print_header():
     print ('#')
     print ('# WARNING: not guaranteed to be consistent!')
     print ('#')
-
-# looks at an argument for a value and prints the key
-#  if a value exists
-# def recurse_for_values(path_prefix, candidate_key):
-#     candidate_values = candidate_key['data']['keys']
-#     for candidate_value in candidate_values:
-#         next_index = path_prefix + candidate_value
-#         if candidate_value.endswith('/'):
-#             next_value = client.list(next_index)
-#             recurse_for_values(next_index, next_value)
-#         else:
-#             stripped_prefix=path_prefix[:-1]
-#             final_dict = client.read(next_index)['data']
-#             print ("\nvault write {}".format(next_index), end='')
-
-#             sorted_final_keys = sorted(final_dict.keys())
-#             for final_key in sorted_final_keys:
-#                 final_value = final_dict[final_key]
-#                 try:
-#                     final_value = final_value.encode("utf-8")
-#                 except AttributeError:
-#                     final_value = final_value
-#                 print (" {0}={1}".format(final_key, repr(final_value)), end='')
 
 
 def get_kv_engines():
@@ -73,9 +51,7 @@ def get_kv_engines():
 
 def recurse_for_values(mount, version, path):
 
-    if version == 1:
-        print("Not supported right now...")
-    elif version == 2:
+    if version == 2:
         try:
             
             list_response = client.secrets.kv.v2.list_secrets(
@@ -96,12 +72,15 @@ def recurse_for_values(mount, version, path):
                     )
                     vault_command = "vault kv put {}".format(full_path)
                     for key, value in secret["data"]["data"].items():
-                        vault_command += " {}={}".format(key,value)
+                        vault_command += " {}={}".format(key,quote(value))
                     
                     print(vault_command)
 
         except hvac.exceptions.InvalidPath:
-            print("No Secrets found in mount {} and path {}".format(mount,path))
+            print("# No Secrets found in mount {} and path {}".format(mount,path))
+    
+    else:
+        print("# v1 not supported right now...")
         
 
 
