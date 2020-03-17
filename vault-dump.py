@@ -74,14 +74,32 @@ def get_kv_engines():
 def recurse_for_values(mount, version, path):
 
     if version == 1:
-        print("Not supported yet...")
+        print("Not supported right now...")
     elif version == 2:
         try:
+            
             list_response = client.secrets.kv.v2.list_secrets(
                 mount_point = mount,
                 path = path
             )
-            print(list_response)
+            
+            candidate_values = list_response['data']['keys']
+            
+            for candidate_value in candidate_values:
+                if candidate_value.endswith('/'):
+                    recurse_for_values(mount, version, path+candidate_value)
+                else:
+                    full_path = mount+path[1:]+candidate_value
+                    secret = client.secrets.kv.v2.read_secret_version(
+                        mount_point = mount,
+                        path=path[1:]+candidate_value,
+                    )
+                    vault_command = "vault kv put {}".format(full_path)
+                    for key, value in secret["data"]["data"].items():
+                        vault_command += " {}={}".format(key,value)
+                    
+                    print(vault_command)
+
         except hvac.exceptions.InvalidPath:
             print("No Secrets found in mount {} and path {}".format(mount,path))
         
