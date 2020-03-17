@@ -64,12 +64,27 @@ def get_kv_engines():
     kv_engines = [
         {
             "path": path,
-            "version": secret_engine["options"]["version"]
+            "version": int(secret_engine["options"]["version"])
         } 
         for path, secret_engine in secret_engines.items() 
         if secret_engine["type"] == "kv"
     ]
     return kv_engines
+
+def recurse_for_values(mount, version, path):
+
+    if version == 1:
+        print("Not supported yet...")
+    elif version == 2:
+        try:
+            list_response = client.secrets.kv.v2.list_secrets(
+                mount_point = mount,
+                path = path
+            )
+            print(list_response)
+        except hvac.exceptions.InvalidPath:
+            print("No Secrets found in mount {} and path {}".format(mount,path))
+        
 
 
 hvac_url = os.environ.get('VAULT_ADDR','http://localhost:8200')
@@ -86,5 +101,5 @@ kv_engines = get_kv_engines()
 
 print_header()
 
-# top_level_keys = client.list(top_vault_prefix)
-# recurse_for_values(top_vault_prefix, top_level_keys)
+for kv_engine in kv_engines:
+    recurse_for_values(kv_engine["path"], kv_engine["version"], "/")
