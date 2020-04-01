@@ -84,14 +84,15 @@ def recurse_for_values(mount, version, path):
         
 
 
-hvac_url = os.environ.get('VAULT_ADDR','http://localhost:8200')
-hvac_token = os.environ.get('VAULT_TOKEN','http://localhost:8200')
+hvac_url = os.environ.get('VAULT_ADDR')
+hvac_role_id = os.environ.get('VAULT_ROLE_ID')
+hvac_secret_id = os.environ.get('VAULT_SECRET_ID')
 
 hvac_client = {
-    'url': hvac_url,
-    'token': hvac_token,
+    'url': hvac_url
 }
 client = hvac.Client(**hvac_client)
+client.auth_approle(hvac_role_id, hvac_secret_id)
 assert client.is_authenticated()
 
 kv_engines = get_kv_engines()
