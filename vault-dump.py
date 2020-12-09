@@ -72,7 +72,10 @@ def recurse_for_values(mount, version, path):
                     )
                     vault_command = "vault kv put {}".format(full_path)
                     for key, value in secret["data"]["data"].items():
-                        vault_command += " {}={}".format(key,quote(value))
+                        try:
+                            vault_command += " {}={}".format(key,quote(value))
+                        except:
+                            print(f"Error with value at path {full_path} with key {key}")
                     
                     print(vault_command)
 
